@@ -2,7 +2,6 @@ package com.biblios.biblionet.model;
 
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -22,20 +21,21 @@ public class Libro {
     @Column(unique = true, length = 20)
     private String isbn;
 
-    private LocalDate fechaPublicacion;
+    @Column(nullable = false, length = 100)
+    private String genero;
 
-    private BigDecimal precio;
+    private LocalDate fechaPublicacion;
 
     public Libro() {
         // Constructor vacío (requerido por JPA)
     }
 
-    public Libro(String titulo, String autor, String isbn, LocalDate fechaPublicacion, BigDecimal precio) {
+    public Libro(String titulo, String autor, String isbn, LocalDate fechaPublicacion, String genero) {
         this.titulo = titulo;
         this.autor = autor;
         this.isbn = isbn;
-        this.fechaPublicacion = fechaPublicacion;
-        this.precio = precio;
+        this.genero = genero;
+        this.fechaPublicacion = fechaPublicacion; 
     }
 
     // ——— Getters y Setters ———
@@ -71,6 +71,12 @@ public class Libro {
     public void setIsbn(String isbn) {
         this.isbn = isbn;
     }
+    public String getGenero(){
+        return genero;
+    }
+    public void setGenero(String genero){
+        this.genero = genero;
+    }
 
     public LocalDate getFechaPublicacion() {
         return fechaPublicacion;
@@ -78,13 +84,5 @@ public class Libro {
 
     public void setFechaPublicacion(LocalDate fechaPublicacion) {
         this.fechaPublicacion = fechaPublicacion;
-    }
-
-    public BigDecimal getPrecio() {
-        return precio;
-    }
-
-    public void setPrecio(BigDecimal precio) {
-        this.precio = precio;
     }
 }

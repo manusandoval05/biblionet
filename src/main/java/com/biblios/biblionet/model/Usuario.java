@@ -13,12 +13,17 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String nombre;
 
+    @Column(unique = true, nullable = false, length = 15)
+    private String numeroCuenta;
+
+
     public Usuario() {
         // Constructor vacío requerido por JPA
     }
 
-    public Usuario(String nombre) {
+    public Usuario(String nombre, String numeroCuenta) {
         this.nombre = nombre;
+        this.numeroCuenta = numeroCuenta;
     }
 
     // ——— Getters y Setters ———
@@ -37,5 +42,11 @@ public class Usuario {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+    public String getNumeroCuenta(){
+        return numeroCuenta;
+    }
+    public void setNumeroCuenta(String numeroCuenta){
+        this.numeroCuenta = numeroCuenta;
     }
 }

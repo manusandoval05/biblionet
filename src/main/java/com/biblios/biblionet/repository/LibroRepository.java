@@ -9,15 +9,34 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repositorio para la entidad {@link Libro}.
+ * Proporciona métodos CRUD y consultas personalizadas para interactuar con la base de datos.
+ */
 @Repository
 public interface LibroRepository extends JpaRepository<Libro, Long> {
 
+    /**
+     * Busca un libro por su ISBN.
+     *
+     * @param isbn Código ISBN del libro
+     * @return Un {@link Optional} con el libro si se encuentra, o vacío si no existe
+     */
     Optional<Libro> findByIsbn(String isbn);
+
+    /**
+     * Busca libros cuyo título contenga el texto dado, sin importar mayúsculas/minúsculas.
+     *
+     * @param fragmento Fragmento del título a buscar
+     * @return Lista de libros que coinciden con el título
+     */
     List<Libro> findByTituloContainingIgnoreCase(String fragmento);
 
     /**
-     * Devuelve todos los libros que NO están actualmente en préstamo activo.
-     * (Es decir, aquellos cuyos IDs no aparecen en ningún Prestamo con fechaDevolucion IS NULL.)
+     * Devuelve todos los libros que **no están en préstamo activo**.
+     * Es decir, aquellos cuyos IDs no aparecen en préstamos con `fechaDevolucion IS NULL`.
+     *
+     * @return Lista de libros actualmente disponibles para préstamo
      */
     @Query("""
       SELECT l 
@@ -29,5 +48,4 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
        )
     """)
     List<Libro> findAllAvailable();
-
 }

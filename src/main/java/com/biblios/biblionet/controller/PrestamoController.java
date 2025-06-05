@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Controlador REST para gestionar préstamos de libros a usuarios.
+ * Expone endpoints bajo la ruta /api/prestamos.
+ */
 @RestController
 @RequestMapping("/api/prestamos")
 @CrossOrigin(origins = "*")
@@ -22,6 +26,13 @@ public class PrestamoController {
     private final LibroRepository libroRepo;
     private final UsuarioRepository usuarioRepo;
 
+    /**
+     * Constructor que inyecta los repositorios necesarios para gestionar préstamos.
+     *
+     * @param prestamoRepo Repositorio de préstamos
+     * @param libroRepo Repositorio de libros
+     * @param usuarioRepo Repositorio de usuarios
+     */
     public PrestamoController(PrestamoRepository prestamoRepo,
                               LibroRepository libroRepo,
                               UsuarioRepository usuarioRepo) {
@@ -30,18 +41,32 @@ public class PrestamoController {
         this.usuarioRepo = usuarioRepo;
     }
 
-    /** GET /api/prestamos → devuelve todos los préstamos **/
+    /**
+     * Devuelve todos los préstamos registrados en el sistema.
+     *
+     * @return Lista de préstamos
+     */
     @GetMapping
     public List<Prestamo> listarTodos() {
         return prestamoRepo.findAll();
     }
 
+    /**
+     * Devuelve los préstamos pendientes (es decir, aquellos cuya fecha de devolución es nula).
+     *
+     * @return Lista de préstamos no devueltos
+     */
     @GetMapping("/pendientes")
     public List<Prestamo> listarPendientes(){
         return prestamoRepo.findByFechaDevolucionIsNull();
     }
 
-    /** GET /api/prestamos/{id} → devuelve un préstamo por su ID **/
+    /**
+     * Devuelve un préstamo específico por su ID.
+     *
+     * @param id Identificador del préstamo
+     * @return Objeto {@link Prestamo} si se encuentra, o 404 si no
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Prestamo> obtenerPorId(@PathVariable Long id) {
         return prestamoRepo.findById(id)
@@ -50,23 +75,19 @@ public class PrestamoController {
     }
 
     /**
-     * POST /api/prestamos/crear
-     * Crea un nuevo préstamo buscando Libro por ISBN y Usuario por numeroCuenta.
-     * JSON de entrada debe incluir:
-     *   - "isbn": ISBN del libro existente
-     *   - "numeroCuenta": número de cuenta del usuario existente
-     *   - "fechaPrestamo": en formato "yyyy-MM-dd"
+     * Crea un nuevo préstamo a partir de los datos proporcionados (ISBN, número de cuenta, fecha de préstamo).
+     *
+     * @param dto DTO con los datos del préstamo
+     * @return Préstamo creado
      */
     @PostMapping("/crear")
     public ResponseEntity<Prestamo> crearPrestamo(@RequestBody PrestamoDto dto) {
-        // 1) Buscar libro por ISBN
         Libro libro = libroRepo.findByIsbn(dto.getIsbn())
                 .orElseThrow(() -> new EntityNotFoundException("Libro no encontrado con ISBN " + dto.getIsbn()));
-        // 2) Buscar usuario por número de cuenta
+
         Usuario usuario = usuarioRepo.findByNumeroCuenta(dto.getNumeroCuenta())
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con número de cuenta " + dto.getNumeroCuenta()));
 
-        // 3) Crear y guardar préstamo
         Prestamo prestamo = new Prestamo();
         prestamo.setLibro(libro);
         prestamo.setUsuario(usuario);
@@ -78,8 +99,10 @@ public class PrestamoController {
     }
 
     /**
-     * PUT /api/prestamos/{id}/devolver
-     * Marca la fechaDevolucion del préstamo como la fecha actual.
+     * Marca un préstamo como devuelto, estableciendo la fecha de devolución como la fecha actual.
+     *
+     * @param id ID del préstamo a actualizar
+     * @return Préstamo actualizado con fecha de devolución
      */
     @PutMapping("/{id}/devolver")
     public ResponseEntity<Prestamo> devolverPrestamo(@PathVariable Long id) {
@@ -93,9 +116,10 @@ public class PrestamoController {
     }
 
     /**
-     * GET /api/prestamos/por-cuenta
-     * ?numeroCuenta=XYZ
-     * Devuelve todos los préstamos activos (fechaDevolucion IS NULL) de un usuario por número de cuenta.
+     * Devuelve todos los préstamos activos (sin devolver) de un usuario, usando su número de cuenta.
+     *
+     * @param numeroCuenta Número de cuenta del usuario
+     * @return Lista de préstamos activos del usuario
      */
     @GetMapping("/por-cuenta")
     public List<Prestamo> buscarActivosPorCuenta(@RequestParam("numeroCuenta") String numeroCuenta) {
@@ -103,39 +127,73 @@ public class PrestamoController {
     }
 
     /**
-     * GET /api/prestamos/por-libro/{libroId}
      * Devuelve todos los préstamos (activos o cerrados) de un libro por su ID.
+     *
+     * @param libroId ID del libro
+     * @return Lista de préstamos relacionados con el libro
      */
     @GetMapping("/por-libro/{libroId}")
     public List<Prestamo> buscarPorLibro(@PathVariable Long libroId) {
         return prestamoRepo.findByLibroId(libroId);
     }
 
-    // DTO para recibir datos de creación de préstamo
+    /**
+     * DTO utilizado para recibir datos al crear un préstamo.
+     */
     public static class PrestamoDto {
         private String isbn;
         private String numeroCuenta;
         private LocalDate fechaPrestamo;
 
+        /**
+         * Constructor vacío necesario para deserialización.
+         */
         public PrestamoDto() { }
 
+        /**
+         * Obtiene el ISBN del libro a prestar.
+         * @return ISBN del libro
+         */
         public String getIsbn() {
             return isbn;
         }
+
+        /**
+         * Establece el ISBN del libro a prestar.
+         * @param isbn ISBN del libro
+         */
         public void setIsbn(String isbn) {
             this.isbn = isbn;
         }
 
+        /**
+         * Obtiene el número de cuenta del usuario que toma el préstamo.
+         * @return Número de cuenta del usuario
+         */
         public String getNumeroCuenta() {
             return numeroCuenta;
         }
+
+        /**
+         * Establece el número de cuenta del usuario que toma el préstamo.
+         * @param numeroCuenta Número de cuenta
+         */
         public void setNumeroCuenta(String numeroCuenta) {
             this.numeroCuenta = numeroCuenta;
         }
 
+        /**
+         * Obtiene la fecha del préstamo.
+         * @return Fecha del préstamo
+         */
         public LocalDate getFechaPrestamo() {
             return fechaPrestamo;
         }
+
+        /**
+         * Establece la fecha del préstamo.
+         * @param fechaPrestamo Fecha del préstamo
+         */
         public void setFechaPrestamo(LocalDate fechaPrestamo) {
             this.fechaPrestamo = fechaPrestamo;
         }
